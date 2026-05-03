@@ -56,3 +56,7 @@ app.get('/', (req, res) => {
 app.use('/uploads', express.static('uploads'));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.use(express.static(__dirname));
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html'); // or index.html
+});
