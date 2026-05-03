@@ -50,7 +50,9 @@ const upload = multer({ storage });
 app.post('/upload', upload.single('image'), (req, res) => {
     res.json({ filename: req.file.filename });
 });
-
+app.get('/', (req, res) => {
+    res.send("StudyBea backend is running 🚀");
+});
 app.use('/uploads', express.static('uploads'));
 
 app.listen(3000, () => console.log("Server running on port 3000"));
