@@ -232,31 +232,27 @@ function setTheme(type) {
     localStorage.setItem("theme", url);
 }
 
-/* UPLOAD */
-function uploadTheme(event) {
+async function uploadTheme(event) {
     const file = event.target.files[0];
-    if (!file) return;
 
-    const formData = new FormData();
+    let formData = new FormData();
     formData.append("image", file);
 
-    fetch("http://localhost:3000/upload", {
+    let res = await fetch("https://studybea.onrender.com/upload", {
         method: "POST",
         body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        const url = `http://localhost:3000/uploads/${data.filename}`;
-        const bg = document.getElementById("bg");
-
-        bg.style.backgroundImage = `url(${url})`;
-        bg.style.backgroundSize = "cover";
-        bg.style.backgroundPosition = "center";
-
-        localStorage.setItem("theme", `url(${url})`);
     });
-}
 
+    let data = await res.json();
+
+    let imageUrl = `https://studybea.onrender.com/uploads/${data.filename}`;
+
+    // ✅ set as background
+    document.getElementById("bg").style.backgroundImage = `url(${imageUrl})`;
+
+    // ✅ save for later
+    localStorage.setItem("bgImage", imageUrl);
+}
 /* CHART */
 function loadChart() {
     fetch('http://localhost:3000/data')
@@ -287,11 +283,11 @@ function loadChart() {
     .catch(err => console.error(err));
 }
 
-/* LOAD SAVED THEME */
-window.onload = () => {
-    const saved = localStorage.getItem("theme");
+
+window.onload = function () {
+    const saved = localStorage.getItem("bgImage");
     if (saved) {
-        document.getElementById("bg").style.backgroundImage = saved;
+        document.getElementById("bg").style.backgroundImage = `url(${saved})`;
     }
 };
 </script>
