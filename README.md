@@ -155,7 +155,7 @@ To manually test:
 ---
 ## 🎥 Demo Video
 
-[Watch Demo](./Demo.Mp4)
+[Watch Demo](./Demo.mp4)
 
 
 ## 🤝 Contribution
