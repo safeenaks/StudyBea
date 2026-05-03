@@ -7,7 +7,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use(express.static(__dirname));
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
 }
@@ -50,13 +50,11 @@ const upload = multer({ storage });
 app.post('/upload', upload.single('image'), (req, res) => {
     res.json({ filename: req.file.filename });
 });
-app.get('/', (req, res) => {
-    res.send("StudyBea backend is running 🚀");
-});
+
 app.use('/uploads', express.static('uploads'));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-app.use(express.static(__dirname));
+
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html'); // or index.html
 });
