@@ -183,7 +183,7 @@ function pause() {
 
     let today = new Date().toISOString().split('T')[0];
 
-    fetch('http://localhost:3000/save-time', {
+   fetch('https://studybea.onrender.com/save-time', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date: today, time: elapsedTime })
@@ -255,7 +255,7 @@ async function uploadTheme(event) {
 }
 /* CHART */
 function loadChart() {
-    fetch('http://localhost:3000/data')
+    fetch('https://studybea.onrender.com/data')
     .then(res => res.json())
     .then(data => {
 
