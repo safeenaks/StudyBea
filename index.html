@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aesthetic Time Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+}
+
+/* Background */
+.background {
+    position: fixed;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: -1;
+}
+
+/* Top Buttons */
+.top-buttons {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.7);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+
+/* Timer */
+.top-section {
+    text-align: center;
+    margin-top: 100px;
+    color: white;
+}
+
+.time {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+/* Theme Panel */
+.theme-card {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    width: 260px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px);
+    padding: 15px;
+    border-radius: 20px;
+    display: none;
+    color: white;
+}
+
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.theme {
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+    text-align: center;
+}
+
+/* Upload */
+.theme.upload {
+    position: relative;
+    overflow: hidden;
+}
+
+.theme.upload input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+}
+
+/* Chart */
+.chart-wrapper {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(700px, 90%);
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 20px;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="background" id="bg"></div>
+
+<!-- Buttons -->
+<div class="top-buttons">
+    <button onclick="toggleChart()">Bar Chart</button>
+    <button onclick="toggleTheme()">Theme</button>
+</div>
+
+<!-- Timer -->
+<div class="top-section">
+    <div class="time" id="display">00:00:00</div>
+    <button onclick="start()">Start</button>
+    <button onclick="pause()">Pause</button>
+    <button onclick="reset()">Reset</button>
+</div>
+
+<!-- Theme Panel -->
+<div class="theme-card" id="themeCard">
+    <h3>Select Theme</h3>
+    <div class="theme-options">
+        <div class="theme" onclick="setTheme('default')">Default</div>
+        <div class="theme" onclick="setTheme('nature')">Nature</div>
+        <div class="theme" onclick="setTheme('dark')">Dark</div>
+
+        <div class="theme upload">
+            Upload
+            <input type="file" accept="image/*" onchange="uploadTheme(event)">
+        </div>
+    </div>
+</div>
+
+<!-- Chart -->
+<div class="chart-wrapper" id="chartBox">
+    <canvas id="chart"></canvas>
+</div>
+
+<script>
+let startTime = 0;
+let elapsedTime = 0;
+let timer;
+let running = false;
+let chart;
+
+/* TIMER */
+function format(ms) {
+    let s = Math.floor(ms / 1000);
+    let m = Math.floor(s / 60);
+    let h = Math.floor(m / 60);
+    s %= 60;
+    m %= 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function start() {
+    if (running) return;
+    running = true;
+    startTime = Date.now() - elapsedTime;
+
+    timer = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        document.getElementById("display").textContent = format(elapsedTime);
+    }, 1000);
+}
+
+function pause() {
+    if (!running) return;
+
+    running = false;
+    clearInterval(timer);
+
+    let today = new Date().toISOString().split('T')[0];
+
+    fetch('http://localhost:3000/save-time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: today, time: elapsedTime })
+    });
+
+    loadChart();
+}
+
+function reset() {
+    clearInterval(timer);
+    elapsedTime = 0;
+    running = false;
+    document.getElementById("display").textContent = "00:00:00";
+}
+
+/* TOGGLES */
+function toggleChart() {
+    const box = document.getElementById("chartBox");
+
+    if (box.style.display === "block") {
+        box.style.display = "none";
+    } else {
+        box.style.display = "block";
+        loadChart(); // important fix
+    }
+}
+
+function toggleTheme() {
+    const panel = document.getElementById("themeCard");
+    panel.style.display = (panel.style.display === "block") ? "none" : "block";
+}
+
+/* THEMES */
+function setTheme(type) {
+    const bg = document.getElementById("bg");
+    let url = "";
+
+    if (type === "default")
+        url = "linear-gradient(135deg,#0f0c29,#302b63,#24243e)";
+    else if (type === "nature")
+        url = "url('https://images.unsplash.com/photo-1501785888041-af3ef285b470')";
+    else if (type === "dark")
+        url = "url('https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d')";
+
+    bg.style.backgroundImage = url;
+    localStorage.setItem("theme", url);
+}
+
+/* UPLOAD */
+function uploadTheme(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    fetch("http://localhost:3000/upload", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        const url = `http://localhost:3000/uploads/${data.filename}`;
+        const bg = document.getElementById("bg");
+
+        bg.style.backgroundImage = `url(${url})`;
+        bg.style.backgroundSize = "cover";
+        bg.style.backgroundPosition = "center";
+
+        localStorage.setItem("theme", `url(${url})`);
+    });
+}
+
+/* CHART */
+function loadChart() {
+    fetch('http://localhost:3000/data')
+    .then(res => res.json())
+    .then(data => {
+
+        console.log("Chart data:", data);
+
+        const labels = Object.keys(data);
+        const values = Object.values(data).map(v => Math.round(v / 60000));
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(document.getElementById("chart"), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: "Minutes per Day",
+                    data: values
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+    })
+    .catch(err => console.error(err));
+}
+
+/* LOAD SAVED THEME */
+window.onload = () => {
+    const saved = localStorage.getItem("theme");
+    if (saved) {
+        document.getElementById("bg").style.backgroundImage = saved;
+    }
+};
+</script>
+
+</body>
+</html>

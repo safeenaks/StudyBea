@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aesthetic Time Tracker</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* 🌌 Background */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    overflow: hidden;
+}
+
+/* Glow blobs */
+body::before, body::after {
+    content: "";
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.6;
+    z-index: 0;
+}
+
+body::before {
+    background: #ff6ec4;
+    top: -100px;
+    left: -100px;
+}
+
+body::after {
+    background: #7873f5;
+    bottom: -100px;
+    right: -100px;
+}
+
+/* 🧊 Glass container */
+.container {
+    position: relative;
+    z-index: 1;
+    width: 420px;
+    padding: 30px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* ⏱ Timer */
+.time {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: white;
+    letter-spacing: 2px;
+}
+
+/* 🔘 Buttons */
+button {
+    padding: 8px 16px;
+    margin: 5px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.25s;
+    font-size: 0.9rem;
+}
+
+button:hover {
+    transform: scale(1.1);
+}
+
+.start { background: #4CAF50; color: white; }
+.pause { background: #f39c12; color: white; }
+.reset { background: #e74c3c; color: white; }
+
+/* 📊 Chart */
+canvas {
+    margin-top: 25px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="time" id="display">00:00:00</div>
+
+    <button class="start" onclick="start()">Start</button>
+    <button class="pause" onclick="pause()">Pause</button>
+    <button class="reset" onclick="reset()">Reset</button>
+
+    <canvas id="chart"></canvas>
+
+</div>
+
+<script>
+let startTime = 0;
+let elapsedTime = 0;
+let timer;
+let running = false;
+
+/* ⏱ Format time */
+function format(ms) {
+    let s = Math.floor(ms / 1000);
+    let m = Math.floor(s / 60);
+    let h = Math.floor(m / 60);
+    s %= 60;
+    m %= 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+/* ▶ Start */
+function start() {
+    if (running) return;
+    running = true;
+
+    startTime = Date.now() - elapsedTime;
+
+    timer = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        document.getElementById("display").textContent = format(elapsedTime);
+    }, 1000);
+}
+
+/* ⏸ Pause + store */
+function pause() {
+    if (!running) return;
+
+    running = false;
+    clearInterval(timer);
+
+    let today = new Date().toISOString().split('T')[0];
+
+    let data = JSON.parse(localStorage.getItem("tracker")) || {};
+
+    data[today] = (data[today] || 0) + elapsedTime;
+
+    localStorage.setItem("tracker", JSON.stringify(data));
+
+    loadChart();
+}
+
+/* 🔄 Reset */
+function reset() {
+    clearInterval(timer);
+    elapsedTime = 0;
+    running = false;
+    document.getElementById("display").textContent = "00:00:00";
+}
+
+/* 📊 Chart */
+let chart;
+
+function loadChart() {
+    let data = JSON.parse(localStorage.getItem("tracker")) || {};
+
+    let labels = Object.keys(data);
+    let values = Object.values(data).map(v => Math.round(v / 60000)); // minutes
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("chart"), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Minutes per Day",
+                data: values
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "white"
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "white" }
+                },
+                y: {
+                    ticks: { color: "white" },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+/* Load chart on start */
+loadChart();
+</script>
+
+</body>
+</html>
