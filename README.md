@@ -153,6 +153,10 @@ To manually test:
 > Add screenshots here (UI, chart, themes)
 
 ---
+## 🎥 Demo Video
+
+[Watch Demo](./Demo.Mp4)
+
 
 ## 🤝 Contribution
 
