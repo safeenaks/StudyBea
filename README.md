@@ -150,7 +150,9 @@ To manually test:
 
 ## 📸 Preview
 
-> Add screenshots here (UI, chart, themes)
+<img width="589" height="911" alt="Screenshot 2026-05-03 182245" src="https://github.com/user-attachments/assets/966b2ee7-256f-43f1-9632-38f356e19238" />
+<img width="578" height="877" alt="Screenshot 2026-05-03 182305" src="https://github.com/user-attachments/assets/53c797af-015a-4372-a00d-a82dca4a3ba5" />
+
 
 ---
 ## 🎥 Demo Video
